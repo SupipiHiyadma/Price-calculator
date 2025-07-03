@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Solar Project Quotation Tool</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 950px;
+      margin: 20px auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1em;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: right;
+    }
+    th.item, td.item {
+      text-align: left;
+    }
+    input[type="number"], select {
+      width: 100%;
+      padding: 4px;
+      text-align: right;
+    }
+    .summary td {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Solar Project Quotation Tool</h1>
+
+<h2>System Requirement Calculator</h2>
+<table>
+  <tbody>
+    <tr>
+      <td class="item">Requirement (kW)</td>
+      <td colspan="3">
+        <input type="number" id="requirement" value="6" min="0" step="0.1" />
+      </td>
+    </tr>
+    <tr>
+      <td class="item">Panel Capacity (W)</td>
+      <td colspan="3">
+        <input type="number" id="panel-capacity" value="500" min="0" step="10" />
+      </td>
+    </tr>
+    <tr>
+      <td class="item">No of Panels</td>
+      <td colspan="3" id="no-panels">0</td>
+    </tr>
+    <tr>
+      <td class="item">System Capacity (kW)</td>
+      <td colspan="3" id="system-capacity">0</td>
+    </tr>
+    <tr>
+      <td class="item">Estimated Units Per Month</td>
+      <td colspan="3" id="monthly-units">0</td>
+    </tr>
+    <tr>
+      <td class="item">Inverter Type</td>
+      <td colspan="3">
+        <select id="inverter-type">
+          <option>Goodwe</option>
+          <option>Growatt</option>
+          <option>Huawei</option>
+          <option>Solis</option>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td class="item">Panel Type</td>
+      <td colspan="3">
+        <select id="panel-type">
+          <option>Trina</option>
+          <option>JA Solar</option>
+          <option>Canadian Solar</option>
+          <option>Jinko</option>
+        </select>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Price Calculator</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th class="item">ITEM</th>
+      <th>QTY</th>
+      <th>RATE (LKR)</th>
+      <th>TOTAL (LKR)</th>
+    </tr>
+  </thead>
+  <tbody id="items-body"></tbody>
+</table>
+
+<table>
+  <tbody>
+    <tr class="summary">
+      <td class="item">Sub Total Cost</td>
+      <td colspan="2"></td>
+      <td id="subtotal">0</td>
+    </tr>
+    <tr>
+      <td class="item">Profit Margin (%)</td>
+      <td colspan="2">
+        <input type="number" id="profit-margin" value="13" min="0" max="100" />
+      </td>
+      <td></td>
+    </tr>
+    <tr class="summary">
+      <td class="item">Profit Value</td>
+      <td colspan="2"></td>
+      <td id="profit-value">0</td>
+    </tr>
+    <tr class="summary">
+      <td class="item">Sub Total + Gross Profit</td>
+      <td colspan="2"></td>
+      <td id="subtotal-gross">0</td>
+    </tr>
+    <tr class="summary">
+      <td class="item">CEB Approval Fee</td>
+      <td colspan="2"></td>
+      <td><input type="number" id="ceb-fee" value="30000" min="0" /></td>
+    </tr>
+    <tr class="summary">
+      <td class="item">Transport Outstation</td>
+      <td colspan="2"></td>
+      <td><input type="number" id="transport-outstation" value="0" min="0" /></td>
+    </tr>
+    <tr class="summary">
+      <td class="item">Other Provisions</td>
+      <td colspan="2"></td>
+      <td><input type="number" id="other-provisions" value="60000" min="0" /></td>
+    </tr>
+    <tr class="summary">
+      <td class="item">Total Project Price With CEB Charges</td>
+      <td colspan="2"></td>
+      <td id="total-price">0</td>
+    </tr>
+    <tr class="summary">
+      <td class="item">Project Quoted Value (Rounded to next 5000)</td>
+      <td colspan="2"></td>
+      <td id="quoted-value">0</td>
+    </tr>
+  </tbody>
+</table>
+
+<script>
+  const items = [
+    { name: "Panel", qty: 6, rate: 21500 },
+    { name: "Inverter Growatt", qty: 1, rate: 160000 },
+    { name: "Approval Service Fee", qty: 1, rate: 6000 },
+    { name: "Railing + Accessories", qty: 1, rate: 28800 },
+    { name: "PV Cable 4mm 2C", qty: 75, rate: 500 },
+    { name: "AC Cable 1C 6mm", qty: 10, rate: 450 },
+    { name: "AC Cable 2C 6mm", qty: 26, rate: 1200 },
+    { name: "Earthing 6mm Cable", qty: 1, rate: 31128 },
+    { name: "Installation", qty: 1, rate: 35000 },
+    { name: "DB", qty: 1, rate: 45000 },
+    { name: "additional roof", qty: 0, rate: 12500 },
+    { name: "Underground wiring", qty: 5, rate: 2500 },
+    { name: "Meter Box Additional", qty: 0, rate: 12500 },
+    { name: "Civil work", qty: 1, rate: 5000 },
+    { name: "Site visit and commisioning", qty: 1, rate: 5000 },
+    { name: "Insurance", qty: 1, rate: 7500 },
+    { name: "Transport (One way distance)", qty: 1, rate: 10000 },
+    { name: "Other", qty: 0, rate: 0 }
+  ];
+
+  const tbody = document.getElementById("items-body");
+  const subtotalEl = document.getElementById("subtotal");
+  const profitMarginEl = document.getElementById("profit-margin");
+  const profitValueEl = document.getElementById("profit-value");
+  const subtotalGrossEl = document.getElementById("subtotal-gross");
+  const cebFeeEl = document.getElementById("ceb-fee");
+  const transportOutEl = document.getElementById("transport-outstation");
+  const otherProvisionsEl = document.getElementById("other-provisions");
+  const totalPriceEl = document.getElementById("total-price");
+  const quotedValueEl = document.getElementById("quoted-value");
+
+  function formatNumber(num) {
+    return num.toLocaleString('en-US');
+  }
+
+  function roundToNext5000(value) {
+    return Math.ceil(value / 5000) * 5000;
+  }
+
+  function calculate() {
+    let subtotal = 0;
+
+    items.forEach((item, index) => {
+      const qtyInput = document.getElementById(`qty-${index}`);
+      const rateInput = document.getElementById(`rate-${index}`);
+      const qty = parseFloat(qtyInput.value) || 0;
+      const rate = parseFloat(rateInput.value) || 0;
+      const total = qty * rate;
+      subtotal += total;
+      document.getElementById(`total-${index}`).textContent = formatNumber(total);
+    });
+
+    subtotalEl.textContent = formatNumber(subtotal);
+
+    const profitMargin = parseFloat(profitMarginEl.value) || 0;
+    const profitValue = subtotal * (profitMargin / 100);
+    profitValueEl.textContent = formatNumber(profitValue);
+
+    const subtotalGross = subtotal + profitValue;
+    subtotalGrossEl.textContent = formatNumber(subtotalGross);
+
+    const cebFee = parseFloat(cebFeeEl.value) || 0;
+    const transportOut = parseFloat(transportOutEl.value) || 0;
+    const otherProvisions = parseFloat(otherProvisionsEl.value) || 0;
+
+    const totalPrice = subtotalGross + cebFee + transportOut + otherProvisions;
+    totalPriceEl.textContent = formatNumber(totalPrice);
+
+    const quotedValue = roundToNext5000(totalPrice);
+    quotedValueEl.textContent = formatNumber(quotedValue);
+  }
+
+  function calculateSystemSpecs() {
+    const requirement = parseFloat(document.getElementById("requirement").value) || 0;
+    const panelCapacity = parseFloat(document.getElementById("panel-capacity").value) || 0;
+
+    let noPanels = 0;
+    if (panelCapacity > 0) {
+      noPanels = Math.ceil((requirement * 1000) / panelCapacity);
+    }
+
+    const systemCapacity = (noPanels * panelCapacity) / 1000;
+    const unitsPerMonth = Math.round(systemCapacity * 110);
+
+    document.getElementById("no-panels").textContent = noPanels;
+    document.getElementById("system-capacity").textContent = systemCapacity.toFixed(2);
+    document.getElementById("monthly-units").textContent = unitsPerMonth;
+  }
+
+  // Generate item rows
+  items.forEach((item, index) => {
+    const row = document.createElement("tr");
+
+    const itemCell = document.createElement("td");
+    itemCell.className = "item";
+    itemCell.textContent = item.name;
+    row.appendChild(itemCell);
+
+    const qtyCell = document.createElement("td");
+    const qtyInput = document.createElement("input");
+    qtyInput.type = "number";
+    qtyInput.min = "0";
+    qtyInput.id = `qty-${index}`;
+    qtyInput.value = item.qty;
+    qtyInput.addEventListener("input", () => {
+      calculate();
+    });
+    qtyCell.appendChild(qtyInput);
+    row.appendChild(qtyCell);
+
+    const rateCell = document.createElement("td");
+    const rateInput = document.createElement("input");
+    rateInput.type = "number";
+    rateInput.min = "0";
+    rateInput.id = `rate-${index}`;
+    rateInput.value = item.rate;
+    rateInput.addEventListener("input", () => {
+      calculate();
+    });
+    rateCell.appendChild(rateInput);
+    row.appendChild(rateCell);
+
+    const totalCell = document.createElement("td");
+    totalCell.id = `total-${index}`;
+    totalCell.textContent = "0";
+    row.appendChild(totalCell);
+
+    tbody.appendChild(row);
+  });
+
+  // Event listeners
+  document.getElementById("requirement").addEventListener("input", () => {
+    calculateSystemSpecs();
+    calculate();
+  });
+  document.getElementById("panel-capacity").addEventListener("input", () => {
+    calculateSystemSpecs();
+    calculate();
+  });
+  profitMarginEl.addEventListener("input", calculate);
+  cebFeeEl.addEventListener("input", calculate);
+  transportOutEl.addEventListener("input", calculate);
+  otherProvisionsEl.addEventListener("input", calculate);
+
+  // Initial calculation
+  calculateSystemSpecs();
+  calculate();
+</script>
+
+</body>
+</html>
